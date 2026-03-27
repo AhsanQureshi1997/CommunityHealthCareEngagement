@@ -1,6 +1,12 @@
-# PBRN Outreach & Gap Closure Tracker
+# PBRN Outreach & Gap Closure Tracker with Clinic Map
 
 GitHub Pages dashboard for multi-clinic outreach operations.
+
+## Added in this version
+- color-coded clinic map
+- clinic dots match site colors used throughout the dashboard
+- dot size reflects action-needed patient count
+- matching legend and clinic snapshot cards
 
 ## What it does
 - identifies which patients need outreach today
@@ -11,9 +17,3 @@ GitHub Pages dashboard for multi-clinic outreach operations.
 
 ## Expected CSV columns
 patient_id,clinic,program,last_contact_days,outreach_attempts,status,outcome,intervention_type,days_to_reengagement
-
-## Deploy
-1. Upload files to repo root or /docs
-2. In GitHub: Settings > Pages
-3. Deploy from a branch
-4. Select main branch and correct folder

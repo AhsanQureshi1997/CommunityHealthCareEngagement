@@ -66,18 +66,51 @@
     <section class="dashboard-grid">
       <section class="card">
         <div class="section-head">
+          <h2>Clinic Map</h2>
+          <p>Color-coded clinic dots with action-needed counts</p>
+        </div>
+        <div class="map-wrap">
+          <svg id="clinicMap" viewBox="0 0 640 420" aria-label="Clinic map">
+            <defs>
+              <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.18"/>
+              </filter>
+            </defs>
+            <path d="M110 85 L510 75 L560 135 L575 250 L510 345 L170 355 L95 275 L80 150 Z"
+                  fill="#eef3fa" stroke="#c8d3e3" stroke-width="3"></path>
+            <path d="M180 115 L470 108 L520 155 L530 245 L480 305 L205 315 L145 260 L135 165 Z"
+                  fill="#f8fbff" stroke="#d8e2ef" stroke-width="2"></path>
+            <text x="320" y="48" text-anchor="middle" class="map-title">Phoenix Metro Service Area</text>
+            <text x="320" y="390" text-anchor="middle" class="map-subtitle">Dot size reflects action-needed patient count</text>
+          </svg>
+          <div id="mapLegend" class="map-legend"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
           <h2>Clinic Performance</h2>
           <p>How each site is doing overall</p>
         </div>
         <canvas id="clinicChart" width="560" height="280"></canvas>
       </section>
+    </section>
 
+    <section class="dashboard-grid">
       <section class="card">
         <div class="section-head">
           <h2>Intervention Effectiveness</h2>
           <p>Re-engagement by outreach method</p>
         </div>
         <canvas id="interventionChart" width="560" height="280"></canvas>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Clinic Snapshot</h2>
+          <p>Quick engagement summary by site</p>
+        </div>
+        <div id="clinicSnapshot" class="metric-list"></div>
       </section>
     </section>
 

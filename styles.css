@@ -141,8 +141,60 @@ canvas {
   height: auto;
   display: block;
 }
-@media (max-width: 920px) {
-  .helper-grid, .summary-grid, .dashboard-grid {
+.map-wrap {
+  display: grid;
+  grid-template-columns: 1.5fr .9fr;
+  gap: 16px;
+  align-items: start;
+}
+#clinicMap {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #dce3ee;
+  border-radius: 14px;
+}
+.map-title {
+  font-size: 18px;
+  font-weight: 700;
+  fill: #0C234B;
+}
+.map-subtitle {
+  font-size: 12px;
+  fill: #5a6b85;
+}
+.map-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #13294b;
+}
+.map-count {
+  font-size: 12px;
+  fill: #5a6b85;
+}
+.map-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dce3ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fbfcfe;
+}
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  flex: 0 0 14px;
+}
+@media (max-width: 980px) {
+  .helper-grid, .summary-grid, .dashboard-grid, .map-wrap {
     grid-template-columns: 1fr;
   }
   .topbar h1 { font-size: 1.9rem; }

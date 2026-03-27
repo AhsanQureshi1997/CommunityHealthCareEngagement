@@ -7,6 +7,21 @@ const showActionBtn = document.getElementById('showActionBtn');
 let currentProcessed = [];
 let currentView = "all";
 
+const clinicColors = {
+  "South Phoenix": "#AB0520",
+  "Maryvale": "#0C234B",
+  "Tempe": "#2F7D4B",
+  "Central Phoenix": "#D99000",
+  "Default": "#6B7280"
+};
+
+const clinicPositions = {
+  "Maryvale": { x: 180, y: 205 },
+  "Central Phoenix": { x: 300, y: 190 },
+  "South Phoenix": { x: 290, y: 265 },
+  "Tempe": { x: 430, y: 245 }
+};
+
 fileInput.addEventListener('change', handleFile);
 demoBtn.addEventListener('click', loadDemo);
 downloadBtn.addEventListener('click', downloadCSV);
@@ -66,11 +81,8 @@ function splitCSVLine(line) {
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'; i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
     } else if (ch === ',' && !inQuotes) {
       result.push(current); current = '';
     } else {
@@ -149,6 +161,8 @@ function renderAll() {
   renderProblemPrograms();
   renderClinicChart();
   renderInterventionChart();
+  renderClinicSnapshot();
+  renderMap();
   renderTable();
 }
 
@@ -245,6 +259,107 @@ function renderProblemPrograms() {
   `).join("");
 }
 
+function renderClinicSnapshot() {
+  const target = document.getElementById("clinicSnapshot");
+  const grouped = {};
+  currentProcessed.forEach(r => {
+    if (!grouped[r.clinic]) grouped[r.clinic] = { total:0, action:0, re:0 };
+    grouped[r.clinic].total += 1;
+    if (r.priority !== "Low") grouped[r.clinic].action += 1;
+    if (normalize(r.outcome) === "re-engaged") grouped[r.clinic].re += 1;
+  });
+
+  const rows = Object.entries(grouped).map(([clinic, data]) => ({
+    clinic,
+    actionPct: data.total ? Math.round((data.action / data.total) * 100) : 0,
+    rePct: data.total ? Math.round((data.re / data.total) * 100) : 0
+  })).sort((a,b) => b.actionPct - a.actionPct);
+
+  target.innerHTML = rows.map(r => `
+    <div class="metric-item">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="legend-dot" style="background:${getClinicColor(r.clinic)}"></span>
+        <strong>${escapeHtml(r.clinic)}</strong>
+      </div>
+      <div style="margin-top:8px;">Needs action: <strong>${r.actionPct}%</strong></div>
+      <div>Re-engaged: <strong>${r.rePct}%</strong></div>
+    </div>
+  `).join("");
+}
+
+function renderMap() {
+  const svg = document.getElementById("clinicMap");
+  svg.querySelectorAll(".dynamic-node").forEach(el => el.remove());
+
+  const grouped = {};
+  currentProcessed.forEach(r => {
+    if (!grouped[r.clinic]) grouped[r.clinic] = { total:0, action:0, re:0 };
+    grouped[r.clinic].total += 1;
+    if (r.priority !== "Low") grouped[r.clinic].action += 1;
+    if (normalize(r.outcome) === "re-engaged") grouped[r.clinic].re += 1;
+  });
+
+  Object.entries(grouped).forEach(([clinic, data]) => {
+    const pos = clinicPositions[clinic] || { x: 320, y: 210 };
+    const color = getClinicColor(clinic);
+    const radius = 12 + Math.min(data.action * 4, 16);
+
+    const circle = createSvgEl("circle", {
+      cx: pos.x,
+      cy: pos.y,
+      r: radius,
+      fill: color,
+      opacity: "0.9",
+      stroke: "#ffffff",
+      "stroke-width": "4",
+      filter: "url(#shadow)",
+      class: "dynamic-node"
+    });
+
+    const label = createSvgEl("text", {
+      x: pos.x,
+      y: pos.y + radius + 20,
+      "text-anchor": "middle",
+      class: "map-label dynamic-node"
+    });
+    label.textContent = clinic;
+
+    const count = createSvgEl("text", {
+      x: pos.x,
+      y: pos.y + radius + 38,
+      "text-anchor": "middle",
+      class: "map-count dynamic-node"
+    });
+    count.textContent = `${data.action} action-needed`;
+
+    svg.appendChild(circle);
+    svg.appendChild(label);
+    svg.appendChild(count);
+  });
+
+  const legend = document.getElementById("mapLegend");
+  legend.innerHTML = Object.keys(grouped).map(clinic => {
+    const color = getClinicColor(clinic);
+    const actionCount = grouped[clinic].action;
+    const total = grouped[clinic].total;
+    return `
+      <div class="legend-item">
+        <span class="legend-dot" style="background:${color}"></span>
+        <div>
+          <strong>${escapeHtml(clinic)}</strong><br>
+          <span style="color:#5a6b85;">${actionCount} action-needed / ${total} total</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function createSvgEl(name, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
 function renderClinicChart() {
   const grouped = {};
   currentProcessed.forEach(r => {
@@ -254,7 +369,8 @@ function renderClinicChart() {
   });
   const labels = Object.keys(grouped);
   const values = labels.map(l => grouped[l].action);
-  drawBarChart(document.getElementById("clinicChart"), labels, values, "#AB0520", "Needs action");
+  const colors = labels.map(l => getClinicColor(l));
+  drawBarChart(document.getElementById("clinicChart"), labels, values, colors, "Needs action");
 }
 
 function renderInterventionChart() {
@@ -266,7 +382,8 @@ function renderInterventionChart() {
   });
   const labels = Object.keys(grouped);
   const values = labels.map(l => grouped[l].total ? Math.round((grouped[l].re / grouped[l].total) * 100) : 0);
-  drawBarChart(document.getElementById("interventionChart"), labels, values, "#0C234B", "Re-engaged %");
+  const colors = labels.map(() => "#0C234B");
+  drawBarChart(document.getElementById("interventionChart"), labels, values, colors, "Re-engaged %");
 }
 
 function renderTable() {
@@ -276,7 +393,7 @@ function renderTable() {
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${escapeHtml(r.patient_id)}</td>
-      <td>${escapeHtml(r.clinic)}</td>
+      <td><span class="legend-dot" style="background:${getClinicColor(r.clinic)};display:inline-block;margin-right:8px;vertical-align:middle;"></span>${escapeHtml(r.clinic)}</td>
       <td>${escapeHtml(r.program)}</td>
       <td>${escapeHtml(r.status)}<br><span style="color:#5a6b85;">${r.last_contact_days} days since contact</span></td>
       <td><span class="badge ${r.priority.toLowerCase()}">${r.priority}</span><br><span style="color:#5a6b85;">Score ${r.priorityScore}</span></td>
@@ -287,7 +404,7 @@ function renderTable() {
   `).join("");
 }
 
-function drawBarChart(canvas, labels, values, color, yTitle) {
+function drawBarChart(canvas, labels, values, colors, yTitle) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
@@ -316,7 +433,7 @@ function drawBarChart(canvas, labels, values, color, yTitle) {
     const x = pad.left + slot * i + (slot - barW) / 2;
     const barH = (values[i] / maxVal) * chartH;
     const y = h - pad.bottom - barH;
-    ctx.fillStyle = color;
+    ctx.fillStyle = Array.isArray(colors) ? colors[i] : colors;
     ctx.fillRect(x, y, barW, barH);
     ctx.fillStyle = "#13294b";
     wrapText(ctx, label, x, h - 36, barW, 14);
@@ -347,6 +464,10 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     }
   }
   ctx.fillText(line, x, lineY);
+}
+
+function getClinicColor(clinic) {
+  return clinicColors[clinic] || clinicColors["Default"];
 }
 
 function average(arr) {
@@ -391,7 +512,7 @@ function downloadCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "pbrn_outreach_analysis.csv";
+  a.download = "pbrn_outreach_analysis_with_map.csv";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
