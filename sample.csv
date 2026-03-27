@@ -1,0 +1,11 @@
+patient_id,clinic,program,last_contact_days,outreach_attempts,status,outcome,intervention_type,days_to_reengagement
+P-1001,South Phoenix,Heat Outreach,164,3,No Response,Not re-engaged,Phone Call,
+P-1002,Maryvale,Lung Screening,38,1,Scheduled,Re-engaged,Text Message,6
+P-1003,South Phoenix,Obesity Follow-up,205,4,No Response,Not re-engaged,Phone Call,
+P-1004,Tempe,Contraception Follow-up,44,2,Reached,Re-engaged,Patient Portal,11
+P-1005,Maryvale,Heat Outreach,121,2,No Response,Not re-engaged,Text Message,
+P-1006,Central Phoenix,Anxiety App Follow-up,18,1,Reached,Re-engaged,App Notification,3
+P-1007,Tempe,Suicide Prevention,96,3,Partial,Scheduled,Phone Call,14
+P-1008,Central Phoenix,Lung Screening,147,3,No Response,Not re-engaged,Patient Portal,
+P-1009,South Phoenix,Heat Outreach,27,1,Reached,Re-engaged,Community Health Worker,4
+P-1010,Maryvale,Obesity Follow-up,76,2,Partial,Scheduled,Text Message,9

@@ -1,46 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Community Engagement Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PBRN Outreach & Gap Closure Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>PBRN Outreach & Gap Closure Tracker</h1>
+      <p>Operational dashboard for multi-clinic outreach, gap closure, and intervention effectiveness</p>
+    </div>
+  </header>
 
-<header>
-  <h1>Community Engagement Dashboard</h1>
-  <p>Population-level outreach, engagement, and intervention tracking</p>
-</header>
+  <main class="wrap">
+    <section class="card controls-card">
+      <div class="controls">
+        <label class="upload">
+          <span>Upload CSV</span>
+          <input type="file" id="fileInput" accept=".csv" />
+        </label>
+        <button id="demoBtn">Load Demo Data</button>
+        <button id="downloadBtn">Download Analyzed CSV</button>
+        <button id="showAllBtn">Show All</button>
+        <button id="showActionBtn">Needs Action</button>
+      </div>
 
-<div class="container">
+      <div class="helper-grid">
+        <div class="helper-card">
+          <h3>Expected CSV columns</h3>
+<pre>patient_id,clinic,program,last_contact_days,outreach_attempts,status,outcome,intervention_type,days_to_reengagement</pre>
+        </div>
+        <div class="helper-card">
+          <h3>What this tool answers</h3>
+          <ul>
+            <li>Who needs outreach today?</li>
+            <li>Which clinics are underperforming?</li>
+            <li>Which intervention types are working best?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
-<div class="controls">
-<button onclick="loadDemo()">Load Demo Data</button>
-<input type="file" id="fileInput">
-<button onclick="filterHigh()">Show High Risk</button>
-<button onclick="showAll()">Show All</button>
-</div>
+    <section id="summary" class="summary-grid"></section>
 
-<div id="summary"></div>
+    <section class="dashboard-grid">
+      <section class="card">
+        <div class="section-head">
+          <h2>Patients Needing Action Today</h2>
+          <p>Highest-priority patients across all sites</p>
+        </div>
+        <div id="actionList" class="action-list"></div>
+      </section>
 
-<canvas id="chart" width="600" height="250"></canvas>
+      <section class="card">
+        <div class="section-head">
+          <h2>Programs with Problems</h2>
+          <p>Sites/programs with highest no-response burden</p>
+        </div>
+        <div id="problemPrograms" class="metric-list"></div>
+      </section>
+    </section>
 
-<table id="table">
-<thead>
-<tr>
-<th>Patient</th>
-<th>Program</th>
-<th>Status</th>
-<th>Days Since Contact</th>
-<th>Attempts</th>
-<th>Risk</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+    <section class="dashboard-grid">
+      <section class="card">
+        <div class="section-head">
+          <h2>Clinic Performance</h2>
+          <p>How each site is doing overall</p>
+        </div>
+        <canvas id="clinicChart" width="560" height="280"></canvas>
+      </section>
 
-</div>
+      <section class="card">
+        <div class="section-head">
+          <h2>Intervention Effectiveness</h2>
+          <p>Re-engagement by outreach method</p>
+        </div>
+        <canvas id="interventionChart" width="560" height="280"></canvas>
+      </section>
+    </section>
 
-<script src="script.js"></script>
+    <section class="card">
+      <div class="section-head">
+        <h2>Patient Table</h2>
+        <p id="tableMode">Showing all patients</p>
+      </div>
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Clinic</th>
+              <th>Program</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Action</th>
+              <th>Intervention</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
