@@ -141,42 +141,18 @@ canvas {
   height: auto;
   display: block;
 }
-.map-wrap {
-  display: grid;
-  grid-template-columns: 1.5fr .9fr;
-  gap: 16px;
-  align-items: start;
-}
-#clinicMap {
+#map {
   width: 100%;
-  height: auto;
-  display: block;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border: 1px solid #dce3ee;
+  height: 430px;
   border-radius: 14px;
-}
-.map-title {
-  font-size: 18px;
-  font-weight: 700;
-  fill: #0C234B;
-}
-.map-subtitle {
-  font-size: 12px;
-  fill: #5a6b85;
-}
-.map-label {
-  font-size: 13px;
-  font-weight: 700;
-  fill: #13294b;
-}
-.map-count {
-  font-size: 12px;
-  fill: #5a6b85;
+  overflow: hidden;
+  border: 1px solid #dce3ee;
 }
 .map-legend {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 10px;
+  margin-top: 14px;
 }
 .legend-item {
   display: flex;
@@ -193,8 +169,12 @@ canvas {
   border-radius: 999px;
   flex: 0 0 14px;
 }
+.leaflet-popup-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
 @media (max-width: 980px) {
-  .helper-grid, .summary-grid, .dashboard-grid, .map-wrap {
+  .helper-grid, .summary-grid, .dashboard-grid {
     grid-template-columns: 1fr;
   }
   .topbar h1 { font-size: 1.9rem; }

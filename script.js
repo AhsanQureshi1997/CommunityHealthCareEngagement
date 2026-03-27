@@ -6,6 +6,8 @@ const showActionBtn = document.getElementById('showActionBtn');
 
 let currentProcessed = [];
 let currentView = "all";
+let map = null;
+let clinicLayerGroup = null;
 
 const clinicColors = {
   "South Phoenix": "#AB0520",
@@ -15,11 +17,12 @@ const clinicColors = {
   "Default": "#6B7280"
 };
 
-const clinicPositions = {
-  "Maryvale": { x: 180, y: 205 },
-  "Central Phoenix": { x: 300, y: 190 },
-  "South Phoenix": { x: 290, y: 265 },
-  "Tempe": { x: 430, y: 245 }
+// Approximate clinic coordinates for a Phoenix metro prototype.
+const clinicCoords = {
+  "South Phoenix": [33.3778, -112.0737],
+  "Maryvale": [33.5020, -112.1771],
+  "Tempe": [33.4255, -111.9400],
+  "Central Phoenix": [33.5095, -112.0730]
 };
 
 fileInput.addEventListener('change', handleFile);
@@ -33,6 +36,18 @@ showActionBtn.addEventListener('click', () => {
   currentView = "action";
   renderTable();
 });
+
+function initMap() {
+  if (map) return;
+  map = L.map('map').setView([33.46, -112.07], 10);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  clinicLayerGroup = L.layerGroup().addTo(map);
+}
 
 function loadDemo() {
   const rows = [
@@ -261,14 +276,7 @@ function renderProblemPrograms() {
 
 function renderClinicSnapshot() {
   const target = document.getElementById("clinicSnapshot");
-  const grouped = {};
-  currentProcessed.forEach(r => {
-    if (!grouped[r.clinic]) grouped[r.clinic] = { total:0, action:0, re:0 };
-    grouped[r.clinic].total += 1;
-    if (r.priority !== "Low") grouped[r.clinic].action += 1;
-    if (normalize(r.outcome) === "re-engaged") grouped[r.clinic].re += 1;
-  });
-
+  const grouped = clinicSummary();
   const rows = Object.entries(grouped).map(([clinic, data]) => ({
     clinic,
     actionPct: data.total ? Math.round((data.action / data.total) * 100) : 0,
@@ -287,10 +295,7 @@ function renderClinicSnapshot() {
   `).join("");
 }
 
-function renderMap() {
-  const svg = document.getElementById("clinicMap");
-  svg.querySelectorAll(".dynamic-node").forEach(el => el.remove());
-
+function clinicSummary() {
   const grouped = {};
   currentProcessed.forEach(r => {
     if (!grouped[r.clinic]) grouped[r.clinic] = { total:0, action:0, re:0 };
@@ -298,44 +303,46 @@ function renderMap() {
     if (r.priority !== "Low") grouped[r.clinic].action += 1;
     if (normalize(r.outcome) === "re-engaged") grouped[r.clinic].re += 1;
   });
+  return grouped;
+}
+
+function renderMap() {
+  initMap();
+  clinicLayerGroup.clearLayers();
+
+  const grouped = clinicSummary();
+  const bounds = [];
 
   Object.entries(grouped).forEach(([clinic, data]) => {
-    const pos = clinicPositions[clinic] || { x: 320, y: 210 };
+    const coords = clinicCoords[clinic];
+    if (!coords) return;
     const color = getClinicColor(clinic);
-    const radius = 12 + Math.min(data.action * 4, 16);
+    const radius = 10 + Math.min(data.action * 4, 16);
+    const rePct = data.total ? Math.round((data.re / data.total) * 100) : 0;
+    const actionPct = data.total ? Math.round((data.action / data.total) * 100) : 0;
 
-    const circle = createSvgEl("circle", {
-      cx: pos.x,
-      cy: pos.y,
-      r: radius,
-      fill: color,
-      opacity: "0.9",
-      stroke: "#ffffff",
-      "stroke-width": "4",
-      filter: "url(#shadow)",
-      class: "dynamic-node"
+    const marker = L.circleMarker(coords, {
+      radius,
+      color: "#ffffff",
+      weight: 2,
+      fillColor: color,
+      fillOpacity: 0.9
     });
 
-    const label = createSvgEl("text", {
-      x: pos.x,
-      y: pos.y + radius + 20,
-      "text-anchor": "middle",
-      class: "map-label dynamic-node"
-    });
-    label.textContent = clinic;
+    marker.bindPopup(`
+      <strong>${escapeHtml(clinic)}</strong><br>
+      Total patients: ${data.total}<br>
+      Needs action: ${data.action} (${actionPct}%)<br>
+      Re-engaged: ${data.re} (${rePct}%)
+    `);
 
-    const count = createSvgEl("text", {
-      x: pos.x,
-      y: pos.y + radius + 38,
-      "text-anchor": "middle",
-      class: "map-count dynamic-node"
-    });
-    count.textContent = `${data.action} action-needed`;
-
-    svg.appendChild(circle);
-    svg.appendChild(label);
-    svg.appendChild(count);
+    marker.addTo(clinicLayerGroup);
+    bounds.push(coords);
   });
+
+  if (bounds.length) {
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
 
   const legend = document.getElementById("mapLegend");
   legend.innerHTML = Object.keys(grouped).map(clinic => {
@@ -354,19 +361,8 @@ function renderMap() {
   }).join("");
 }
 
-function createSvgEl(name, attrs) {
-  const el = document.createElementNS("http://www.w3.org/2000/svg", name);
-  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
-  return el;
-}
-
 function renderClinicChart() {
-  const grouped = {};
-  currentProcessed.forEach(r => {
-    if (!grouped[r.clinic]) grouped[r.clinic] = { total:0, action:0 };
-    grouped[r.clinic].total += 1;
-    if (r.priority !== "Low") grouped[r.clinic].action += 1;
-  });
+  const grouped = clinicSummary();
   const labels = Object.keys(grouped);
   const values = labels.map(l => grouped[l].action);
   const colors = labels.map(l => getClinicColor(l));
@@ -512,7 +508,7 @@ function downloadCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "pbrn_outreach_analysis_with_map.csv";
+  a.download = "pbrn_outreach_analysis_actual_map.csv";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
