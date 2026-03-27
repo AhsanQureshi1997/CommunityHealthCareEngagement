@@ -1,0 +1,11 @@
+body {font-family: Arial; background:#f4f6f8; margin:0;}
+header {background:#0C234B; color:white; padding:20px;}
+.container {padding:20px;}
+.controls {margin-bottom:15px;}
+button {margin-right:10px; padding:8px;}
+table {width:100%; border-collapse:collapse; margin-top:20px;}
+th {background:#AB0520; color:white; padding:10px;}
+td {padding:10px; border-bottom:1px solid #ddd;}
+.high {color:red; font-weight:bold;}
+.medium {color:orange;}
+.low {color:green;}
